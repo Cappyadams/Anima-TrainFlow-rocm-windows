@@ -114,7 +114,7 @@ DEFAULT_SETTINGS = {
     "dit_path": str(ROOT / "models" / "anima" / "dit" / "anima-preview.safetensors"),
     "qwen_path": str(ROOT / "models" / "anima" / "text_encoder" / "qwen_3_06b_base.safetensors"),
     "vae_path": str(ROOT / "models" / "anima" / "vae" / "qwen_image_vae.safetensors"),
-    "network_rank": 16,
+    "network_rank": 32,
     "learning_rate": "1.0", # Prodigy default
     "optimizer": "Prodigy", # Prodigy default
     "training_steps": 2400,
