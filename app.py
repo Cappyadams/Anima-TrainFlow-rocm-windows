@@ -128,6 +128,8 @@ DEFAULT_SETTINGS = {
     "sample_cfg": 4.0,
     "sample_seed": 42,
     "train_seed": 42,
+    "train_batch_size": 1,
+    "gradient_accumulation_steps": 1
 }
 def load_settings():
     settings = DEFAULT_SETTINGS.copy()
@@ -154,7 +156,6 @@ HIDDEN_SETTINGS = {
     "mixed_precision": "bf16",
     "save_precision": "bf16",
     "gradient_checkpointing": True,
-    "train_batch_size": 1,
     "network_module": "networks.lora_anima",
     "network_train_unet_only": True,
     "timestep_sampling": "logit_normal",
@@ -167,10 +168,9 @@ HIDDEN_SETTINGS = {
     "weighting_scheme": "logit_normal",
     "max_data_loader_n_workers": 4,
     "persistent_data_loader_workers": True,
-    "gradient_accumulation_steps": 1,
     "max_grad_norm": 1.0,
     "vae_batch_size": 1,
-    "blocks_to_swap": 0,
+    "blocks_to_swap": 0
 }
 
 
@@ -241,7 +241,7 @@ def create_dataset_toml(project_name, dataset_path, trigger_word, base_res, max_
     with open(config_path, "w", encoding="utf-8") as f: toml.dump(dataset_config, f)
     return str(config_path)
 
-def create_training_toml(project_name, config_save_dir, actual_output_dir, rank, lr, optimizer, max_steps, save_steps, sample_steps, models, prompt_path, train_seed):
+def create_training_toml(project_name, config_save_dir, actual_output_dir, rank, lr, optimizer, max_steps, save_steps, sample_steps, models, prompt_path, train_seed, batch_size, grad_acc):
     config_path = config_save_dir / f"{project_name}_training.toml"
     network_alpha = max(1, int(rank) // 2)
     
@@ -266,7 +266,8 @@ def create_training_toml(project_name, config_save_dir, actual_output_dir, rank,
         "optimizer_args": opt_args,
         "lr_scheduler": scheduler,
         "max_train_steps": int(max_steps),
-        "train_batch_size": HIDDEN_SETTINGS["train_batch_size"],
+        "train_batch_size": int(batch_size),
+        "gradient_accumulation_steps": int(grad_acc),
         "mixed_precision": HIDDEN_SETTINGS["mixed_precision"],
         "output_dir": actual_output_dir.resolve().as_posix(),
         "output_name": project_name,
@@ -300,7 +301,7 @@ def get_latest_images(sample_dir):
     
     return [(img, Path(img).name) for img in images]
 
-def start_training(trigger_word, dataset_path, dit_p, qwen_p, vae_p, rank, lr, optimizer, t_steps, save_steps, sample_steps, pos, neg, w, h, s_steps_gen, s_cfg, s_seed, train_seed):
+def start_training(trigger_word, dataset_path, dit_p, qwen_p, vae_p, rank, lr, optimizer, t_steps, save_steps, sample_steps, pos, neg, w, h, s_steps_gen, s_cfg, s_seed, train_seed, batch_size, grad_acc):
     global training_process
 
      # --- PATH VALIDATION BLOCK ---
@@ -355,7 +356,7 @@ def start_training(trigger_word, dataset_path, dit_p, qwen_p, vae_p, rank, lr, o
     models = {"dit_path": dit_p, "qwen_path": qwen_p, "vae_path": vae_p}
     prompt_path = create_sample_prompts(project_name, trigger_word, pos, neg, w, h, s_steps_gen, s_cfg, s_seed, project_configs_dir)
     dataset_toml = create_dataset_toml(project_name, dataset_path, trigger_word, base_res, max_bucket, project_configs_dir)
-    training_toml = create_training_toml(project_name, project_configs_dir, project_out_dir, rank, lr, optimizer, t_steps, save_steps, sample_steps, models, prompt_path, train_seed)
+    training_toml = create_training_toml(project_name, project_configs_dir, project_out_dir, rank, lr, optimizer, t_steps, save_steps, sample_steps, models, prompt_path, train_seed, batch_size, grad_acc)
 
     cmd = [
         str(PORTABLE_PYTHON.resolve()), "-m", "accelerate.commands.launch", "--num_processes=1", "--mixed_precision=bf16", "--dynamo_backend=no",
@@ -494,10 +495,12 @@ with gr.Blocks(title="Anima TrainFlow: Easy LoRA Trainer for Anima 2B") as ui:
                     lr_input = gr.Textbox(label="Learning Rate", value=cs.get("learning_rate", "1.0"))
                     optimizer_input = gr.Dropdown(label="Optimizer", choices=["Prodigy", "AdamW8bit", "AdamW"], value=cs.get("optimizer", "Prodigy"))
                     train_seed_val = gr.Number(value=cs.get("train_seed", 42), visible=False)
+                    batch_size_input = gr.Number(label="Batch Size", value=cs.get("train_batch_size", 1), precision=0)
                 with gr.Row():
                     steps_input = gr.Number(label="Training Steps", value=cs.get("training_steps", 2400), precision=0)
                     save_steps_input = gr.Number(label="Save Every n Steps", value=cs.get("save_steps", 300), precision=0)
                     sample_steps_input = gr.Number(label="Preview Every n Steps", value=cs.get("sample_steps", 300), precision=0)
+                    grad_acc_input = gr.Number(label="Gradient Accumulation", value=cs.get("gradient_accumulation_steps", 1), precision=0)
 
     with gr.Row():
         with gr.Column(scale=1):
@@ -519,7 +522,7 @@ with gr.Blocks(title="Anima TrainFlow: Easy LoRA Trainer for Anima 2B") as ui:
         rank_input, lr_input, optimizer_input, 
         steps_input, save_steps_input, sample_steps_input,
         pos_prompt, neg_prompt, width_input, height_input,
-        sample_steps_gen_input, sample_cfg_input, sample_seed_input, train_seed_val
+        sample_steps_gen_input, sample_cfg_input, sample_seed_input, train_seed_val, batch_size_input, grad_acc_input
     ]
 
     def load_state_on_refresh():
