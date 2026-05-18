@@ -329,6 +329,19 @@ def start_training(trigger_word, dataset_path, dit_p, qwen_p, vae_p, rank, lr, o
         yield full_error, gr.update()
         return
     # --- END VALIDATION BLOCK ---
+
+    # --- CUDA CHECK BLOCK ---
+    if not torch.cuda.is_available():
+        cuda_error = (
+            "❌ ERROR: NVIDIA GPU not detected or CUDA drivers are not installed!\n\n"
+            "Technical details:\n"
+            "- PyTorch cannot initialize CUDA.\n"
+            "- Training on CPU is extremely slow and is not supported by this script.\n\n"
+            "Please update your NVIDIA drivers and restart the app."
+        )
+        yield cuda_error, gr.update()
+        return
+    # --- END CUDA CHECK ---
     
     if training_process is not None and training_process.poll() is None:
         yield "⚠️ Training is already running!", gr.update()
@@ -372,6 +385,9 @@ def start_training(trigger_word, dataset_path, dit_p, qwen_p, vae_p, rank, lr, o
     env["PYTHONWARNINGS"] = "ignore"
     env["TORCH_CPP_LOG_LEVEL"] = "ERROR"
     env["KMP_WARNINGS"] = "0"
+
+    env["CUDA_VISIBLE_DEVICES"] = "0"
+    env["ACCELERATE_USE_CPU"] = "False"
 
     try:
         training_process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=True, bufsize=1, cwd=str(TRAIN_DIR.resolve()), env=env, encoding="utf-8", errors="ignore")
