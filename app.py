@@ -11,6 +11,7 @@ import sys
 import gradio as gr
 import psutil
 from PIL import Image
+import torch
 
 CSS = """
 .gradio-container {
