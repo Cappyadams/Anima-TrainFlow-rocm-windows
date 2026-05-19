@@ -11,7 +11,7 @@ if not exist "python_embeded\python.exe" (
 set "PY_EXE=%~dp0python_embeded\python.exe"
 
 echo [1/3] Installing PyTorch (CUDA 12.8)...
-"%PY_EXE%" -m pip install torch==2.6.0 torchvision==0.21.0 --index-url https://download.pytorch.org/whl/cu128
+"%PY_EXE%" -m pip install torch torchvision --index-url https://download.pytorch.org/whl/cu128
 
 echo [2/3] Installing Dependencies from sd-scripts...
 cd /d "%~dp0training\sd-scripts"
