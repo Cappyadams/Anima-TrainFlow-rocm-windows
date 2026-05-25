@@ -26,11 +26,11 @@ If you prefer to set up the environment manually instead of using the portable v
 3. **Download Required Models:**
    Run the following commands from the root folder:
 
-   **WD Tagger** (used for auto-captioning):
+   *   **WD Tagger** (used for auto-captioning):
        ```bash
        git clone https://huggingface.co/SmilingWolf/wd-eva02-large-tagger-v3 models/wd-eva02-large-tagger-v3
        ```
-   **U2Net Model** (used for Smart Cropping):
+   *   **U2Net Model** (used for Smart Cropping):
        ```bash
        curl -L -o models/u2net/u2net.onnx https://github.com/danielgatis/rembg/releases/download/v0.0.0/u2net.onnx
        ```
