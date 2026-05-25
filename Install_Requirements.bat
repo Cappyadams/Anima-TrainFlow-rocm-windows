@@ -23,6 +23,6 @@ echo [3/3] Linking sd-scripts library...
 cd /d %~dp0
 
 echo.
-echo ✅ Installation Complete!
+echo Installation Complete!
 echo You can now run the trainer via start_trainer.bat
 pause

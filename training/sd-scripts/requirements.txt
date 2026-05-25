@@ -20,4 +20,5 @@ imagesize==1.4.1
 numpy
 rich==14.1.0
 sentencepiece==0.2.1
+onnxruntime-gpu==1.23.2
 -e .
