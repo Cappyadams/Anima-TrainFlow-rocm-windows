@@ -5,7 +5,7 @@ Anima TrainFlow is a streamlined, one-page GUI for training LoRA on the **Anima 
 ![Anima TrainFlow Interface Preview](preview.png)
 
 ## Quick Start (Portable)
-1. [**Download Portable Version (3.1GB)**](https://huggingface.co/datasets/ThetaCursed/Anima-TrainFlow-Portable/resolve/main/Anima-TrainFlow-v1.1.0-Portable.7z?download=true)
+1. [**Download Portable Version (3GB)**](https://huggingface.co/datasets/ThetaCursed/Anima-TrainFlow-Portable/resolve/main/Anima-TrainFlow-v1.1.0-Portable.7z?download=true)
 2. **Extract the archive using [7-Zip](https://7-zip.org/) or WinRAR**.
 3. Run `start_trainer.bat`.
 4. Open the `🔧 Paths to Models <- Set Once` accordion and specify the paths to your model files.
