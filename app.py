@@ -173,8 +173,9 @@ HIDDEN_SETTINGS = {
     "gradient_checkpointing": True,
     "network_module": "networks.lora_anima",
     "network_train_unet_only": True,
-    "timestep_sampling": "logit_normal",
-    "discrete_flow_shift": 3.0,
+    "timestep_sampling": "sigmoid",
+    "discrete_flow_shift": 1.0,
+    "weighting_scheme": "none",
     "cache_latents": True,
     "cache_latents_to_disk": True,
     "cache_text_encoder_outputs_to_disk": True,
@@ -185,7 +186,8 @@ HIDDEN_SETTINGS = {
     "persistent_data_loader_workers": True,
     "max_grad_norm": 1.0,
     "vae_batch_size": 1,
-    "blocks_to_swap": 0
+    "blocks_to_swap": 0,
+    "sigmoid_scale": 1.3,
 }
 
 
@@ -231,27 +233,54 @@ def create_sample_prompts(project_name, trigger_word, pos_prompt, neg_prompt, wi
     with open(prompt_path, "w", encoding="utf-8") as f: f.write(prompt_str)
     return str(prompt_path)
 
-def create_dataset_toml(project_name, dataset_path, trigger_word, base_res, max_bucket, out_dir):
+def create_dataset_toml(project_name, dataset_path, trigger_word, base_res, max_bucket, out_dir, max_steps, batch_size, grad_acc):
     config_path = out_dir / f"{project_name}_dataset.toml"
     prefix = f"{trigger_word.strip()}, " if trigger_word.strip() else None
+
+    path = Path(dataset_path)
+    valid_exts = {'.png', '.jpg', '.jpeg', '.webp', '.bmp'}
+    num_images = len([f for f in path.glob('*') if f.is_file() and f.suffix.lower() in valid_exts])
+
+    if num_images == 0: num_images = 1
+
+    effective_batch = int(batch_size) * int(grad_acc)
+    calculated_repeats = (int(max_steps) * effective_batch) / num_images
+    final_repeats = max(1, math.ceil(calculated_repeats))
+
     dataset_config = {
-        "general": {"enable_bucket": True, "min_bucket_reso": 256, "max_bucket_reso": max_bucket, "bucket_reso_steps": 64, "bucket_no_upscale": True},
+        "general": {
+            "enable_bucket": True, 
+            "min_bucket_reso": 256, 
+            "max_bucket_reso": max_bucket, 
+            "bucket_reso_steps": 64, 
+            "bucket_no_upscale": True
+        },
         "datasets": [{
             "resolution": base_res, 
-            "subsets": [{"image_dir": Path(dataset_path).resolve().as_posix(), "caption_extension": ".txt", "num_repeats": 1000, "caption_prefix": prefix, "keep_tokens": 1, "caption_dropout_rate": 0.05}]
+            "subsets": [{
+                "image_dir": Path(dataset_path).resolve().as_posix(), 
+                "caption_extension": ".txt", 
+                "num_repeats": final_repeats,
+                "caption_prefix": prefix, 
+                "keep_tokens": 1, 
+                "caption_dropout_rate": 0.05
+            }]
         }]
     }
-    with open(config_path, "w", encoding="utf-8") as f: toml.dump(dataset_config, f)
+    with open(config_path, "w", encoding="utf-8") as f: 
+        toml.dump(dataset_config, f)
     return str(config_path)
 
 def create_training_toml(project_name, config_save_dir, actual_output_dir, rank, lr, optimizer, max_steps, save_steps, sample_steps, models, prompt_path, train_seed, batch_size, grad_acc):
     config_path = config_save_dir / f"{project_name}_training.toml"
-    network_alpha = max(1, int(rank) // 2)
+
+    network_rank = int(rank)
+    network_alpha = network_rank
     
     opt_args = ["weight_decay=0.01"]
     if optimizer == "Prodigy":
         scheduler = "constant"
-        opt_args = ["decouple=True", "weight_decay=0.1", "d_coef=1.0", "use_bias_correction=True", "safeguard_warmup=True", "betas=0.9,0.99"]
+        opt_args = ["decouple=True", "weight_decay=0.01", "d_coef=1.0", "use_bias_correction=True", "safeguard_warmup=True", "betas=0.9,0.99"]
     else:
         scheduler = "cosine"
 
@@ -264,6 +293,7 @@ def create_training_toml(project_name, config_save_dir, actual_output_dir, rank,
         "network_alpha": network_alpha,
         "network_train_unet_only": HIDDEN_SETTINGS["network_train_unet_only"],
         "gradient_checkpointing": HIDDEN_SETTINGS["gradient_checkpointing"],
+        "max_grad_norm": 1.0,
         "learning_rate": float(lr),
         "optimizer_type": optimizer,
         "optimizer_args": opt_args,
@@ -280,6 +310,7 @@ def create_training_toml(project_name, config_save_dir, actual_output_dir, rank,
         "sample_sampler": "euler",
         "timestep_sampling": HIDDEN_SETTINGS["timestep_sampling"],
         "discrete_flow_shift": HIDDEN_SETTINGS["discrete_flow_shift"],
+        "sigmoid_scale": HIDDEN_SETTINGS["sigmoid_scale"],
         "weighting_scheme": HIDDEN_SETTINGS["weighting_scheme"],
         "cache_latents": True,
         "cache_latents_to_disk": True,
@@ -775,7 +806,7 @@ def start_training(trigger_word, dataset_path, dit_p, qwen_p, vae_p, rank, lr, o
 
     models = {"dit_path": dit_p, "qwen_path": qwen_p, "vae_path": vae_p}
     prompt_path = create_sample_prompts(project_name, trigger_word, pos, neg, w, h, s_steps_gen, s_cfg, s_seed, project_configs_dir)
-    dataset_toml = create_dataset_toml(project_name, dataset_path, trigger_word, base_res, max_bucket, project_configs_dir)
+    dataset_toml = create_dataset_toml(project_name, dataset_path, trigger_word, base_res, max_bucket, project_configs_dir, t_steps, batch_size, grad_acc)
     training_toml = create_training_toml(project_name, project_configs_dir, project_out_dir, rank, lr, optimizer, t_steps, save_steps, sample_steps, models, prompt_path, train_seed, batch_size, grad_acc)
 
     cmd = [
