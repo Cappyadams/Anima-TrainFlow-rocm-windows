@@ -7,8 +7,8 @@ Anima TrainFlow is a streamlined, one-page GUI for training LoRA on the **Anima 
 
 `Raw Images` ➔ `Smart Resize & Crop*` ➔ `Auto-Tag` ➔ `One-Click Train**` ➔ `Ready LoRA`
 
-\* **Smart Prep:** In most cases, it only performs resizing. Intelligent cropping is triggered only for extreme aspect ratios that don't fit into training buckets.
-\** **Fast Results:** Average training time is **~1 hour** (benchmarked on RTX 3060 12GB).
+**Smart Prep:** In most cases, it only performs resizing. Intelligent cropping is triggered only for extreme aspect ratios that don't fit into training buckets.
+**Fast Results:** Average training time is **~1 hour** (benchmarked on RTX 3060 12GB).
 
 ![Anima TrainFlow Interface Preview](preview.png)
 
