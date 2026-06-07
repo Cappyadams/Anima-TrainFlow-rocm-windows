@@ -1,3 +1,30 @@
+# This fork is for AMD gpus (on windows), please use the original repo if you havce an nvidia GPU
+
+### IMPORTANT
+**I am not a pro programmer or anythin like that. if you have issues, I can TRY to help... but I don't have all the answers**
+
+## HOW TO INSTALL:
+1. Clone the repo
+   ```bash
+   git clone github.com/Cappyadams/Anima-TrainFlow-rocm-windows
+   cd Anima-TrainFlow-rocm-windows
+   ```
+2. Run `Install_Requirements.bat` if you have a GFX110x GPU. if you have a different GPU, please edit the file and change the "https://rocm.nightlies.amd.com/v2/gfx110X-all/" link to the link that matches your GPU. ([GO HERE FOR LINKS!](https://github.com/CS1o/Stable-Diffusion-Info/wiki/Lora-Trainer-Setup-Guides#amd-onetrainer-with-rocmtherock))
+3. run these commands in the root folder:
+      *   **WD Tagger** (used for auto-captioning):
+       ```git clone https://huggingface.co/SmilingWolf/wd-eva02-large-tagger-v3 models/wd-eva02-large-tagger-v3```
+   *   **U2Net Model** (used for Smart Cropping):
+       ```rl -L -o models/u2net/u2net.onnx https://github.com/danielgatis/rembg/releases/download/v0.0.0/u2net.onnx```
+4. Run `start_trainer.bat` and have fun! :)
+
+# CREDITS
+
+- ThetaCursed for the og repo
+- CS1o for the AMD guides that helped make this repo possible! https://github.com/CS1o/Stable-Diffusion-Info
+- CappyAdams for the modding/fork
+
+# ORIGINAL DESCRIPTION!!!:
+
 # Anima TrainFlow
 
 Anima TrainFlow is a streamlined, one-page GUI for training LoRA on the **Anima 2B** model. Optimized to run on hardware with as little as **6GB of VRAM**, it eliminates technical overhead by focusing on the essential settings that impact training results the most.
