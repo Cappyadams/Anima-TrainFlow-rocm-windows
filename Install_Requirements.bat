@@ -2,6 +2,9 @@
 setlocal
 cd /d %~dp0
 
+echo WARNING!: This installs ROCM for GFX110x by default. if you have a different GPU, please edit this file!
+pause
+
 if not exist "python_embeded\python.exe" (
     echo [ERROR] python_embeded folder not found!
     pause
@@ -10,8 +13,8 @@ if not exist "python_embeded\python.exe" (
 
 set "PY_EXE=%~dp0python_embeded\python.exe"
 
-echo [1/3] Installing PyTorch (CUDA 12.8)...
-"%PY_EXE%" -m pip install torch torchvision --index-url https://download.pytorch.org/whl/cu128
+echo [1/3] Installing PyTorch (ROCM)...
+"%PY_EXE%" -m pip install --index-url https://rocm.nightlies.amd.com/v2/gfx110X-all/ torch torchvision
 
 echo [2/3] Installing Dependencies from sd-scripts...
 cd /d "%~dp0training\sd-scripts"

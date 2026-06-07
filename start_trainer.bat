@@ -2,6 +2,9 @@
 setlocal
 cd /d %~dp0
 
+set TORCH_ROCM_AOTRITON_ENABLE_EXPERIMENTAL=1
+set FLASH_ATTENTION_TRITON_AMD_ENABLE=TRUE
+
 set "PY_EXE=%~dp0python_embeded\python.exe"
 
 if not exist "%PY_EXE%" (
