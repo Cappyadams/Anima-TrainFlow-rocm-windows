@@ -17,6 +17,9 @@
        ```rl -L -o models/u2net/u2net.onnx https://github.com/danielgatis/rembg/releases/download/v0.0.0/u2net.onnx```
 4. Run `start_trainer.bat` and have fun! :)
 
+# IMPORTANT:
+If you have a CPU with integrated graphics, make sure to edit the "start_trainer.bat" file and add `HIP_VISIBLE_DEVICES=`, then add 1 or 0 after the "=" symbol
+
 # CREDITS
 
 - ThetaCursed for the og repo
