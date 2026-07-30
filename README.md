@@ -14,7 +14,7 @@
       *   **WD Tagger** (used for auto-captioning):
        ```git clone https://huggingface.co/SmilingWolf/wd-eva02-large-tagger-v3 models/wd-eva02-large-tagger-v3```
    *   **U2Net Model** (used for Smart Cropping):
-       ```rl -L -o models/u2net/u2net.onnx https://github.com/danielgatis/rembg/releases/download/v0.0.0/u2net.onnx```
+       ```curl -L -o models/u2net/u2net.onnx https://github.com/danielgatis/rembg/releases/download/v0.0.0/u2net.onnx```
 4. Run `start_trainer.bat` and have fun! :)
 
 # IMPORTANT:
